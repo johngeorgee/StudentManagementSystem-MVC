@@ -1,6 +1,6 @@
 namespace Project.Repository;
 
-public class CourseReposiory
+public class CourseRepository
 {
     
 }
