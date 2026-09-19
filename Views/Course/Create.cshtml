@@ -1,0 +1,59 @@
+@model Course
+
+@{
+    ViewData["Title"] = "Add Course";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Add Course</title>
+</head>
+<body>
+<div>
+
+    <form asp-controller="Course" asp-action="Add" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input id="Name" name="Name" value="@Model?.Name" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Degree</label>
+            <input id="Degree" name="Degree" type="text" value="@Model?.Degree" class="form-control" />
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label"> Minimum Degree</label>
+            <input id="MinDegree" name="MinDegree" type="text" value="@Model?.MinDegree" class="form-control" />
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Department</label>
+            <select asp-for="DepartmentId"  asp-items="ViewBag.Departments" class="form-select">
+               
+                <option value=" ">-- Select Department --</option>
+                    
+                
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Instructor</label>
+            <select id="InstructorId" name="InstructorId"  asp-items="ViewBag.Instructors" class="form-select">
+                
+                   
+                    <option value=" ">-- Select Instructor --</option>
+                
+
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/Course/Index" class="btn btn-secondary">Cancel</a>
+
+    </form>
+</div>
+</body>
+</html>
