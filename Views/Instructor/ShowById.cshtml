@@ -1,0 +1,105 @@
+@model Project.Models.Instructor
+
+@{
+    ViewData["Title"] = "Instructor Details";
+}
+
+<!-- Profile Header -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person-badge me-2"></i>Instructor Profile
+        </h6>
+        <div>
+            <a href="/Instructor/Edit/@Model.Id" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a href="/Instructor/Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center mb-3 mb-md-0">
+                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.png" : Model.ImageUrl)"
+                     alt="@Model.Name"
+                     class="rounded-circle border"
+                     style="width:140px; height:140px; object-fit:cover;" />
+            </div>
+            <div class="col-md-9">
+                <h4 class="mb-1">@Model.Name</h4>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-journal-bookmark me-1"></i>@Model.Course?.Name
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-envelope me-2"></i>
+                            <span>@Model.Email</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-telephone me-2"></i>
+                            <span>@Model.Phone</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            <span>@Model.Address</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-cash-coin me-2"></i>
+                            <span>@Model.Salary.ToString("N0") EGP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Department + Course Cards -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-primary-subtle text-primary">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Department</div>
+                        <a href="/Department/ShowById/@Model.DepartmentId"
+                           class="h6 mb-0 fw-semibold text-decoration-none">
+                            @Model.Department.Name
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-success-subtle text-success">
+                        <i class="bi bi-journal-bookmark"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Course</div>
+                        <a href="/Course/Details/@Model.CourseId"
+                           class="h6 mb-0 fw-semibold text-decoration-none">
+                            @Model.Course.Name
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
