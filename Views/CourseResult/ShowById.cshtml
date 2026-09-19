@@ -1,0 +1,108 @@
+@model Project.Models.CourseResult
+
+@{
+    ViewData["Title"] = "Course Result Details";
+    var passed = Model.Course != null && Model.Degree >= Model.Course.MinDegree;
+    var percentage = Model.Course != null && Model.Course.Degree > 0
+        ? (double)Model.Degree / Model.Course.Degree * 100
+        : 0;
+}
+
+<!-- Result Header -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-clipboard-check me-2"></i>Course Result
+        </h6>
+        <div>
+            <a href="/CourseResult/Edit/@Model.Id" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a href="/CourseResult/Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body text-center py-4">
+        <!-- Big status badge -->
+        @if (passed)
+        {
+            <div class="mb-3">
+                <i class="bi bi-patch-check-fill text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="text-success mb-1">Passed</h3>
+        }
+        else
+        {
+            <div class="mb-3">
+                <i class="bi bi-x-octagon-fill text-danger" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="text-danger mb-1">Failed</h3>
+        }
+
+        <p class="text-muted mb-4">
+            @Model.Trainee?.Name &mdash; @Model.Course?.Name
+        </p>
+
+        <!-- Score -->
+        <div style="max-width: 480px; margin: 0 auto;">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Degree</span>
+                <strong>@Model.Degree / @Model.Course?.Degree</strong>
+            </div>
+            <div class="progress" style="height: 22px;">
+                <div class="progress-bar @(passed ? "bg-success" : "bg-danger")"
+                     role="progressbar"
+                     style="width: @percentage.ToString("0")%;"
+                     aria-valuenow="@percentage"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    @percentage.ToString("0.0")%
+                </div>
+            </div>
+            <div class="text-muted small mt-2">
+                Minimum required: @Model.Course?.MinDegree
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related links -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-primary-subtle text-primary">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Trainee</div>
+                        <a href="/Trainee/Details/@Model.TraineeId"
+                           class="h6 mb-0 fw-semibold text-decoration-none">
+                            @Model.Trainee?.Name
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-success-subtle text-success">
+                        <i class="bi bi-journal-bookmark"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Course</div>
+                        <a href="/Course/Details/@Model.CourseId"
+                           class="h6 mb-0 fw-semibold text-decoration-none">
+                            @Model.Course?.Name
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
