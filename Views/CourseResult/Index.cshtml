@@ -1,0 +1,125 @@
+@model List<CourseResult>
+
+@{
+    ViewData["Title"] = "Course Results";
+}
+
+<div class="card stat-card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-people me-2"></i>Course Results List</h6>
+        <a asp-controller="CourseResult" asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> New Results
+        </a>
+    </div>
+
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <form asp-action="Index" method="get">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" value="@Context.Request.Query["search"]"
+                           class="form-control" placeholder="Search results..."/>
+                    <button type="submit" class="btn btn-primary">
+                        Search
+                    </button>
+                </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table  align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Id</th>
+                    <th>Degree</th>
+                    <th>Course Id </th>
+                    <th>Trainee Id </th>
+                    <th class="text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var result in Model)
+                {
+                    
+                    <tr>
+                        <td>@result.Id</td>
+                        <td>@result.Degree</td>
+                        <td>@result.CourseId</td>
+                        <td>@result.TraineeId</td>
+                        <td class="text-end">
+                            <a href="/CourseResult/ShowById/@result.Id" class="btn btn-sm btn-outline-info"><i class="bi bi-eye">View</i></a>
+                            <a href="/CourseResult/Edit/@result.Id" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil">Edit</i></a>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal"
+                                    data-id="@result.Id"
+                                    data-name="@result.Degree">
+                                <i class="bi bi-trash">Delete</i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    Confirm Delete
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                Are you sure you want to delete
+                <strong id="resultDegree"></strong>?
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <form id="deleteForm" method="post">
+                    <button type="submit" class="btn btn-danger">
+                        Delete
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    const deleteModal = document.getElementById('deleteModal');
+
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+
+        const button = event.relatedTarget;
+
+        const id = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+
+        document.getElementById('resultDegree').textContent = name;
+
+        document.getElementById('deleteForm').action =
+            '/CourseResult/Delete/' + id;
+    });
+</script>
