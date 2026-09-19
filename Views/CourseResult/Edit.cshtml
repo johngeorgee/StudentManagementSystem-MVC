@@ -1,0 +1,53 @@
+@model Project.Models.ViewModels.EditResult
+
+@{
+    ViewData["Title"] = "Edit Result";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Edit Result</title>
+</head>
+<body>
+<div>
+    <h2 class="mb-3">Edit Result</h2>
+
+    <form asp-controller="CourseResult" asp-action="SaveEdit" method="post">
+        <input type="hidden" asp-for="Id">
+        <div class="mb-3">
+            <label asp-for="Degree" class="form-label">Degree</label>
+            <input asp-for="Degree" type="number" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="CourseId">Course</label>
+            <select asp-for="CourseId"  class="form-select">
+                @foreach (var item in Model.Course)
+                {
+                    <option value="@item.Id" >@item.Name</option>
+                }
+                    
+                
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" asp-for="TraineeId">Trainee</label>
+            <select asp-for="TraineeId"  class="form-select">
+                @foreach (var item in Model.Trainee)
+                {
+                    <option value="@item.Id" >@item.Name</option>
+                }
+                    
+                
+            </select>
+        </div>
+       
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-controller="CourseResult" asp-action="Index" class="btn btn-secondary">Back</a>
+
+    </form>
+</div>
+</body>
+</html>
