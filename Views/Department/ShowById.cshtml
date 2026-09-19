@@ -1,0 +1,191 @@
+@model Project.Models.Department
+
+@{
+    ViewData["Title"] = "Department Details";
+}
+
+<!-- Header Card -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-building me-2"></i>Department Details
+        </h6>
+        <div>
+            <a href="/Department/Edit/@Model.Id" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a href="/Department/Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">ID</dt>
+                    <dd class="col-sm-8">@Model.Id</dd>
+
+                    <dt class="col-sm-4 text-muted">Name</dt>
+                    <dd class="col-sm-8 fw-semibold">@Model.Name</dd>
+
+                    <dt class="col-sm-4 text-muted">Manager</dt>
+                    <dd class="col-sm-8">@Model.ManagerName</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <div class="row text-center g-3">
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Courses</div>
+                            <h5 class="mb-0">@(Model.Courses?.Count ?? 0)</h5>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Instructors</div>
+                            <h5 class="mb-0">@(Model.Instructors?.Count ?? 0)</h5>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <div class="text-muted small">Trainees</div>
+                            <h5 class="mb-0">@(Model.Trainees?.Count ?? 0)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Courses -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-journal-bookmark me-2"></i>Courses
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Courses != null && Model.Courses.Any())
+        {
+            <table class="table  mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Degree</th>
+                        <th>Min Degree</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Courses)
+                    {  
+                        <tr>
+                            <td>@c.Name</td>
+                            <td>@c.Degree</td>
+                            <td>@c.MinDegree</td>
+                            <td class="text-end">
+                                <a href="/Course/ShowById/@c.Id" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted p-3 mb-0">No courses in this department.</p>
+        }
+    </div>
+</div>
+
+<!-- Instructors -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person-badge me-2"></i>Instructors
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Instructors != null && Model.Instructors.Any())
+        {
+            <table class="table mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Course</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model.Instructors)
+                    {
+                        <tr>
+                            <td>@i.Name</td>
+                            <td>@i.Email</td>
+                            <td>@i.Phone</td>
+                            <td>@i.Course?.Name</td>
+                            <td class="text-end">
+                                <a href="/Instructor/ShowById/@i.Id" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted p-3 mb-0">No instructors in this department.</p>
+        }
+    </div>
+</div>
+
+<!-- Trainees -->
+<div class="card stat-card">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-people me-2"></i>Trainees
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Trainees != null && Model.Trainees.Any())
+        {
+            <table class="table mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Grade</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.Trainees)
+                    {
+                        <tr>
+                            <td>@t.Name</td>
+                            <td>@t.PhoneNumber</td>
+                            <td>@t.Grade</td>
+                            <td class="text-end">
+                                <a href="/Trainee/ShowById/@t.Id" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted p-3 mb-0">No trainees in this department.</p>
+        }
+    </div>
+</div>
