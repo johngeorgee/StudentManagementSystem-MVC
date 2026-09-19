@@ -1,0 +1,113 @@
+@model Project.Models.Trainee
+
+@{
+    ViewData["Title"] = "Trainee Details";
+}
+
+<!-- Profile Header -->
+<div class="card stat-card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-person me-2"></i>Trainee Profile
+        </h6>
+        <div>
+            <a href="/Trainee/Edit/@Model.Id" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+            <a href="/Trainee/Index" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center mb-3 mb-md-0">
+                <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/default-avatar.png" : Model.ImageUrl)"
+                     alt="@Model.Name"
+                     class="rounded-circle border"
+                     style="width:140px; height:140px; object-fit:cover;" />
+            </div>
+            <div class="col-md-9">
+                <h4 class="mb-1">@Model.Name</h4>
+                <p class="text-muted mb-3">
+                    <i class="bi bi-building me-1"></i>@Model.Department?.Name
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-telephone me-2"></i>
+                            <span>@Model.PhoneNumber</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="bi bi-mortarboard me-2"></i>
+                            <span>Grade: <strong>@Model.Grade</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transcript -->
+<div class="card stat-card">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold">
+            <i class="bi bi-clipboard-check me-2"></i>Transcript
+            <span class="badge bg-secondary ms-2">@(Model.CourseResults?.Count ?? 0) courses</span>
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.CourseResults != null && Model.CourseResults.Any())
+        {
+            <table class="table mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Course</th>
+                        <th>Department</th>
+                        <th>Degree</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.CourseResults)
+                    {
+                        var passed = r.Course != null && r.Degree >= r.Course.MinDegree;
+                        <tr>
+                            <td>@r.Course?.Name</td>
+                            <td>@r.Course?.Department?.Name</td>
+                            <td>@r.Degree / @r.Course?.Degree</td>
+                            <td>
+                                @if (passed)
+                                {
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Passed
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Failed
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a href="/CourseResult/Details/@r.Id" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted p-3 mb-0">No course results recorded for this trainee yet.</p>
+        }
+    </div>
+</div>
