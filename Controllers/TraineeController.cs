@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Project.Data;
+using Project.Interfaces;
 using Project.Models;
 using Project.Models.ViewModels;
 
@@ -9,40 +10,38 @@ namespace Project.Controllers;
 
 public class TraineeController : Controller
 {
-    private readonly AppDbContext _context;
-
-    public TraineeController(AppDbContext context)
+    private readonly ITraineeRepository _traineeRepository;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IResultRepository _resultRepository;
+    public TraineeController( ITraineeRepository traineeRepository, 
+        IDepartmentRepository departmentRepository, IResultRepository resultRepository)
     {
-        _context = context;
+        _traineeRepository = traineeRepository;
+        _departmentRepository = departmentRepository;
+        _resultRepository = resultRepository;
     }
     // GET
     public IActionResult Index(string search)
     {
-        var trainees = _context.Trainees.AsQueryable()
-            .Include(c => c.CourseResults)
-            .Include(d => d.Department);
+        var trainees = _traineeRepository.GetTraineeDetails();
         if (!string.IsNullOrWhiteSpace(search))
         {
-            trainees = trainees.Where(t => t.Name.Contains(search))
-                .Include(c => c.CourseResults)
-                .Include(d => d.Department);
+            trainees = trainees.Where(t => t.Name.Contains(search));
         }
     
         return View(trainees.ToList());
     }
     public IActionResult ShowById(int id)
     {
-        var trainee = _context.Trainees
-            .Include(c => c.CourseResults)
-            .Include(d=>d.Department)
-            .FirstOrDefault(t => t.Id == id);
+        var trainee = _traineeRepository.GetTraineeDetails()
+                     .FirstOrDefault(t => t.Id == id);
         return View(trainee);
     }
 
     public IActionResult Create()
     {
         ViewBag.Departments = new SelectList(
-            _context.Departments.ToList(),
+           _departmentRepository.GetAll(),
             "Id",
             "Name"
         );
@@ -53,8 +52,8 @@ public class TraineeController : Controller
     {
         if (trainee != null)
         {
-            _context.Trainees.Add(trainee);
-            _context.SaveChanges();
+            _traineeRepository.Add(trainee);
+            _traineeRepository.SaveChanges();
             return RedirectToAction("Index");
         }
         return View(trainee);
@@ -62,57 +61,54 @@ public class TraineeController : Controller
     [HttpGet] 
     public IActionResult Edit(int id)
     {
-        Trainee Trainee = _context.Trainees.FirstOrDefault(t => t.Id == id);
-        EditTrainee TraineeVM = new EditTrainee();
-        TraineeVM.Id = Trainee.Id;
-        TraineeVM.Name = Trainee.Name;
-        TraineeVM.PhoneNumber = Trainee.PhoneNumber;
-        TraineeVM.Grade = Trainee.Grade;
-        TraineeVM.DepartmentId = Trainee.DepartmentId;
-        TraineeVM.CourseResults = _context.CourseResults.ToList();
-        TraineeVM.Department = _context.Departments.ToList();
+        Trainee? trainee = _traineeRepository.GetById(id);
+        EditTrainee? TraineeVM = new EditTrainee();
+        TraineeVM.Id = trainee.Id;
+        TraineeVM.Name = trainee.Name;
+        TraineeVM.PhoneNumber = trainee.PhoneNumber;
+        TraineeVM.Grade = trainee.Grade;
+        TraineeVM.DepartmentId = trainee.DepartmentId;
+        TraineeVM.CourseResults = _resultRepository.GetAll();
+        TraineeVM.Department = _departmentRepository.GetAll();
 
         return View("Edit", TraineeVM);
     }
 
     [HttpPost]
-    public IActionResult SaveEdit(EditTrainee trainee)
+    public IActionResult SaveEdit(EditTrainee traineeVM)
     {
         if (ModelState.IsValid)
         {
-            Trainee TraineeData = _context.Trainees.FirstOrDefault(ins => ins.Id == trainee.Id);
-            TraineeData.Id = trainee.Id;
-            TraineeData.Name = trainee.Name;
-            TraineeData.PhoneNumber = trainee.PhoneNumber;
-            TraineeData.Grade = trainee.Grade;
-            TraineeData.DepartmentId = trainee.DepartmentId;
-            
+            Trainee? Trainee = _traineeRepository.GetById(traineeVM.Id);
+            Trainee.Id = traineeVM.Id;
+            Trainee.Name = traineeVM.Name;
+            Trainee.PhoneNumber = traineeVM.PhoneNumber;
+            Trainee.Grade = traineeVM.Grade;
+            Trainee.DepartmentId = traineeVM.DepartmentId;
+            traineeVM.CourseResults = _resultRepository.GetAll();
+            traineeVM.Department = _departmentRepository.GetAll();
           
-            trainee.CourseResults = _context.CourseResults.ToList();
-            trainee.Department = _context.Departments.ToList();
-          
-            
-            _context.SaveChanges();
+            _traineeRepository.SaveChanges();
+
             return RedirectToAction("Index");
 
         }
         else
         {
-            trainee.Department = _context.Departments.ToList();
-            return View("Edit", trainee);
+            traineeVM.Department = _departmentRepository.GetAll();
+            return View("Edit", traineeVM);
         }
     }
     [HttpPost]
     public IActionResult Delete(int id)
     {
-        Trainee? trainee = _context.Trainees
-            .FirstOrDefault(i => i.Id == id);
+        Trainee? trainee = _traineeRepository.GetById(id);
 
         if (trainee == null)
             return NotFound();
-
-        _context.Trainees.Remove(trainee);
-        _context.SaveChanges();
+        
+        _traineeRepository.Delete(trainee.Id);
+        _traineeRepository.SaveChanges();
 
         return RedirectToAction("Index");
     }
