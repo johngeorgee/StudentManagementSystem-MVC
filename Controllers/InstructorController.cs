@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Project.Data;
+using Project.Interfaces;
 using Project.Models;
 using Project.Models.ViewModels;
 
@@ -9,45 +10,44 @@ namespace Project.Controllers;
 
 public class InstructorController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly IInstructorRepository _instructorRepository;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly ICourseRepository _courseRepository;
 
-    public InstructorController(AppDbContext context)
+    public InstructorController( IInstructorRepository instructorRepository,
+        IDepartmentRepository departmentRepository, ICourseRepository courseRepository)
     {
-        _context = context;
+        _instructorRepository = instructorRepository;
+        _departmentRepository = departmentRepository;
+        _courseRepository = courseRepository;
     }
     // GET
     public IActionResult Index(string search)
     {
-        var instructors = _context.Instructors.AsQueryable()
-            .Include(d => d.Department)
-            .Include(c => c.Course);
+        var instructors = _instructorRepository.GetInstructorDetails();
           
         if (!string.IsNullOrWhiteSpace(search))
         {
-            instructors = instructors.Where(i => i.Name.Contains(search))
-                .Include(d => d.Department)
-                .Include(c => c.Course);
-                
+            instructors = instructors.Where(i => i.Name.Contains(search));
+
         }
         return View(instructors.ToList());
     }
     public IActionResult ShowById(int id)
     {
-        var instructor = _context.Instructors
-            .Include(d=> d.Department)
-            .Include(c => c.Course)
-            .FirstOrDefault(ins => ins.Id == id);
+        var instructor = _instructorRepository.GetInstructorDetails()
+            .FirstOrDefault(i => i.Id == id);
         return View(instructor);
     }
     public IActionResult Create()
     {
         ViewBag.Courses = new SelectList(
-            _context.Courses.ToList(),
+            _courseRepository.GetAll(),
             "Id",
             "Name"
         );
         ViewBag.Departments = new SelectList(
-            _context.Departments.ToList(),
+            _departmentRepository.GetAll(),
             "Id",
             "Name"
         );
@@ -57,8 +57,8 @@ public class InstructorController : Controller
     {
         if (instructor != null)
         {
-            _context.Instructors.Add(instructor);
-            _context.SaveChanges();
+            _instructorRepository.Add(instructor);
+            _instructorRepository.SaveChanges();
             return RedirectToAction("Index");
         }
         return View(instructor);
@@ -66,9 +66,9 @@ public class InstructorController : Controller
     [HttpGet] 
     public IActionResult Edit(int id)
     {
-        var Instructor = _context.Instructors.FirstOrDefault(i => i.Id == id);
-        List <Course> courses= _context.Courses.ToList();
-        List <Department> departments= _context.Departments.ToList();
+        var Instructor =_instructorRepository.GetById(id);
+        List<Course> courses = _courseRepository.GetAll();
+        List<Department> departments = _departmentRepository.GetAll();
         EditInstructor InstructorVM = new EditInstructor();
         InstructorVM.Id = Instructor.Id;
         InstructorVM.Name = Instructor.Name;
@@ -88,19 +88,19 @@ public class InstructorController : Controller
     {
         if (ModelState.IsValid)
         {
-            var InsData = _context.Instructors.FirstOrDefault(ins => ins.Id == instructor.Id);
+            var InsData = _instructorRepository.GetById(instructor.Id);
             InsData.Id = instructor.Id;
             InsData.Name = instructor.Name;
             InsData.Salary = instructor.Salary;
             InsData.Email = instructor.Email;
             InsData.DepartmentId = instructor.DepartmentId;
             InsData.CourseId = instructor.CourseId;
-          
-            instructor.Course = _context.Courses.ToList();
-            instructor.Department = _context.Departments.ToList();
+            instructor.Course = _courseRepository.GetAll();
+            instructor.Department = _departmentRepository.GetAll();
+            
           
             
-            _context.SaveChanges();
+            _instructorRepository.SaveChanges();
             return RedirectToAction("Index");
 
         }
@@ -112,14 +112,13 @@ public class InstructorController : Controller
     [HttpPost]
     public IActionResult Delete(int id)
     {
-        Instructor? instructor = _context.Instructors
-            .FirstOrDefault(i => i.Id == id);
+        Instructor? instructor = _instructorRepository.GetById(id);
 
         if (instructor == null)
             return NotFound();
-
-        _context.Instructors.Remove(instructor);
-        _context.SaveChanges();
+        
+        _instructorRepository.Delete(instructor.Id);
+        _instructorRepository.SaveChanges();
 
         return RedirectToAction("Index");
     }
