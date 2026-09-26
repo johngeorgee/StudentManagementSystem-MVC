@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Project.Data;
+using Project.Interfaces;
 using Project.Models;
 using Project.Models.ViewModels;
 
@@ -9,44 +10,45 @@ namespace Project.Controllers;
 
 public class CourseResultController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly IResultRepository _resultRepository;
+    private readonly ICourseRepository _courseRepository;
+    private readonly ITraineeRepository _traineeRepository;
 
-    public CourseResultController(AppDbContext context)
+    public CourseResultController( IResultRepository resultRepository,
+        ICourseRepository courseRepository,  ITraineeRepository traineeRepository)
     {
-        _context = context;
+        _resultRepository = resultRepository;
+        _courseRepository = courseRepository;
+        _traineeRepository = traineeRepository;
     }
     // GET
     public IActionResult Index(string search)
     {
-        var results = _context.CourseResults.AsQueryable()
-            .Include(t => t.Trainee)
-            .Include(c => c.Course);
+        var results = _resultRepository.GetResultDetails();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            results = results.Where(r => r.Course.Name.Contains(search))
-                .Include(t => t.Trainee)
-                .Include(c => c.Course);
+            results = results.Where(r => r.Course.Name.Contains(search));
+
         }
         return View(results.ToList());
     }
     public IActionResult ShowById(int id)
     {
-        var result = _context.CourseResults
-            .Include(t => t.Trainee)
-            .Include(c => c.Course)
+
+        var result = _resultRepository.GetResultDetails()
             .FirstOrDefault(r => r.Id == id);
         return View(result);
     }
     public IActionResult Create()
     {
         ViewBag.Courses = new SelectList(
-            _context.Courses.ToList(),
+            _courseRepository.GetAll(),
             "Id",
             "Name"
         );
         ViewBag.Trainees = new SelectList(
-            _context.Trainees.ToList(),
+           _traineeRepository.GetAll(),
             "Id",
             "Name"
         );
@@ -56,8 +58,9 @@ public class CourseResultController : Controller
     {
         if (courseResult != null)
         {
-            _context.CourseResults.Add(courseResult);
-            _context.SaveChanges();
+
+            _resultRepository.Add(courseResult);
+            _resultRepository.SaveChanges();
             return RedirectToAction("Index");
         }
         return View(courseResult);
@@ -65,15 +68,16 @@ public class CourseResultController : Controller
     [HttpGet] 
     public IActionResult Edit(int id)
     {
-        CourseResult Result = _context.CourseResults.FirstOrDefault(r => r.Id == id);
+
+       CourseResult Result = _resultRepository.GetById(id);
 
         EditResult ResultVM = new EditResult();
         ResultVM.Id = Result.Id;
         ResultVM.Degree = Result.Degree;
         ResultVM.CourseId = Result.CourseId;
         ResultVM.TraineeId = Result.TraineeId;
-        ResultVM.Course =  _context.Courses.ToList();
-        ResultVM.Trainee =  _context.Trainees.ToList();
+        ResultVM.Course = _courseRepository.GetAll();
+        ResultVM.Trainee = _traineeRepository.GetAll();
 
         return View("Edit", ResultVM);
     }
@@ -83,14 +87,15 @@ public class CourseResultController : Controller
     {
         if (ModelState.IsValid)
         {
-            CourseResult ResultData = _context.CourseResults.FirstOrDefault(c => c.Id == result.Id);
+            CourseResult ResultData = _resultRepository.GetById(result.Id);
             ResultData.Id = result.Id;
             ResultData.Degree = result.Degree;
             ResultData.CourseId = result.CourseId;
             ResultData.TraineeId = result.TraineeId;
-            result.Course = _context.Courses.ToList();
-            result.Trainee = _context.Trainees.ToList();
-            _context.SaveChanges();
+            
+            result.Course = _courseRepository.GetAll();
+            result.Trainee =_traineeRepository.GetAll();
+            _resultRepository.SaveChanges();
             return RedirectToAction("Index");
 
         }
@@ -102,14 +107,13 @@ public class CourseResultController : Controller
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            CourseResult? result = _context.CourseResults
-                .FirstOrDefault(i => i.Id == id);
+            CourseResult? result = _resultRepository.GetById(id);
 
             if (result == null)
                 return NotFound();
 
-            _context.CourseResults.Remove(result);
-            _context.SaveChanges();
+            _resultRepository.Delete(id);
+            _resultRepository.SaveChanges();
 
             return RedirectToAction("Index");
         }
