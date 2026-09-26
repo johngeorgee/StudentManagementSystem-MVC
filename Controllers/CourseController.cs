@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Project.Data;
+using Project.Interfaces;
 using Project.Models;
 using Project.Models.ViewModels;
 
@@ -10,47 +11,46 @@ namespace Project.Controllers;
 
 public class CourseController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly ICourseRepository _courseRepository;
+    private readonly IDepartmentRepository _deptRepository;
+    private readonly  IInstructorRepository _instructorRepository;
 
-    public CourseController(AppDbContext context)
+    public CourseController(ICourseRepository  courseRepository,
+        IDepartmentRepository deptRepository, IInstructorRepository instructorRepository)
     {
-        _context = context;
+        _courseRepository = courseRepository;
+        _instructorRepository  = instructorRepository;
+        _deptRepository = deptRepository;
+
     }
     // GET
     public IActionResult Index(string search)
     {
-        var courses = _context.Courses.AsQueryable()
-            .Include(r => r.CourseResults)
-            .ThenInclude(t => t.Trainee)
-            .Include(t => t.Instructors)
-            .Include(d => d.Department);
+
+        var courses = _courseRepository.GetCourseDetails();
         if (!string.IsNullOrWhiteSpace(search))
         {
-            courses = courses.Where(c => c.Name.Contains(search)).Include(r => r.CourseResults)
-                .ThenInclude(t => t.Trainee)
-                .Include(t => t.Instructors)
-                .Include(d => d.Department);;
+            courses = courses.Where(c => c.Name.Contains(search));
         }
+
         return View(courses.ToList());
+
     }
     public IActionResult ShowById(int id)
     {
-        var course = _context.Courses.Include(r => r.CourseResults)
-            .ThenInclude(t => t.Trainee)
-            .Include(t => t.Instructors)
-            .Include(d => d.Department)
+        var course = _courseRepository.GetCourseDetails()
             .FirstOrDefault(c => c.Id == id);
         return View(course);
     }
     public IActionResult Create()
     {
         ViewBag.Departments = new SelectList(
-            _context.Departments.ToList(),
+            _deptRepository.GetAll(),
             "Id",
             "Name"
         );
         ViewBag.Instructors = new SelectList(
-            _context.Instructors.ToList(),
+            _instructorRepository.GetAll(),
             "Id",
             "Name"
         );
@@ -61,8 +61,9 @@ public class CourseController : Controller
     {
         if (course != null)
         {
-            _context.Courses.Add(course);
-            _context.SaveChanges();
+
+            _courseRepository.Add(course);
+            _courseRepository.SaveChanges();
             return RedirectToAction("Index");
         }
         return View(course);
@@ -70,14 +71,14 @@ public class CourseController : Controller
     [HttpGet] 
     public IActionResult Edit(int id)
     {
-        Course? Course = _context.Courses.FirstOrDefault(c => c.Id == id);
-        if (Course == null) return NotFound();
+        Course? course = _courseRepository.GetById(id);
+        if (course == null) return NotFound();
         EditCourse CourseVM = new EditCourse();
-        CourseVM.Id = Course.Id;
-        CourseVM.Name = Course.Name;
-        CourseVM.Degree = Course.Degree;
-        CourseVM.DepartmentId = Course.DepartmentId;
-        CourseVM.Department = _context.Departments.ToList();
+        CourseVM.Id = course.Id;
+        CourseVM.Name = course.Name;
+        CourseVM.Degree = course.Degree;
+        CourseVM.DepartmentId = course.DepartmentId;
+        CourseVM.Department = _deptRepository.GetAll();
 
 
         return View("Edit", CourseVM);
@@ -88,45 +89,31 @@ public class CourseController : Controller
     {
         if (!ModelState.IsValid)
         {
-            foreach (var item in ModelState)
-            {
-                Console.WriteLine($"KEY: {item.Key}");
-
-                foreach (var error in item.Value.Errors)
-                {
-                    Console.WriteLine($"ERROR: {error.ErrorMessage}");
-                }
-            }
-            course.Department = _context.Departments.ToList();
+           course.Department = _deptRepository.GetAll();
 
             return View("Edit", course);
         }
-
-        Course? courseData = _context.Courses
-            .FirstOrDefault(c => c.Id == course.Id);
-
+        Course? courseData = _courseRepository.GetById(course.Id);
         if (courseData == null)
             return NotFound();
 
         courseData.Name = course.Name;
         courseData.Degree = course.Degree;
         courseData.DepartmentId = course.DepartmentId;
-        _context.SaveChanges();
-
+        _courseRepository.SaveChanges();
         return RedirectToAction("Index");
         
     }
     [HttpPost]
     public IActionResult Delete(int id)
     {
-        Course? course = _context.Courses
-            .FirstOrDefault(i => i.Id == id);
+        Course? course = _courseRepository.GetById(id);
 
         if (course == null)
             return NotFound();
 
-        _context.Courses.Remove(course);
-        _context.SaveChanges();
+        _courseRepository.Delete(course.Id);
+        _courseRepository.SaveChanges();
 
         return RedirectToAction("Index");
     }
