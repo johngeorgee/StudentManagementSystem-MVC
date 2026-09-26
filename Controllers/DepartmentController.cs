@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Project.Data;
+using Project.Interfaces;
 using Project.Models;
 using Project.Models.ViewModels;
 
@@ -9,46 +10,48 @@ namespace Project.Controllers;
 
 public class DepartmentController : Controller
 {
-    private readonly AppDbContext _context;
+    private readonly IDepartmentRepository _departmentRepository;
+    private readonly IInstructorRepository _instructorRepository;
+    private readonly ICourseRepository _courseRepository;
+    private readonly ITraineeRepository  _traineeRepository;
 
-    public DepartmentController(AppDbContext context)
+    public DepartmentController( IDepartmentRepository departmentRepository,
+        IInstructorRepository instructorRepository,  ICourseRepository courseRepository, 
+        ITraineeRepository traineeRepository)
     {
-        _context = context;
+
+        _departmentRepository = departmentRepository;
+        _instructorRepository = instructorRepository;
+        _courseRepository = courseRepository;
+        _traineeRepository = traineeRepository;
     }
     // GET
     public IActionResult Index(string search)
     {
-        var departments = _context.Departments.AsQueryable()
-            .Include(c=> c.Courses)
-            .Include(t => t.Trainees)
-            .Include(t => t.Instructors);
+        var departments = _departmentRepository.GetDepartmentDetails();
         if (!string.IsNullOrWhiteSpace(search))
         {
-            departments = departments.Where(d => d.Name.Contains(search))
-                .Include(c=> c.Courses)
-                .Include(t => t.Trainees)
-                .Include(t => t.Instructors);
+            departments = departments.Where(d => d.Name.Contains(search));
+
         }
         return View(departments.ToList());
     }
     public IActionResult ShowById(int id)
     {
-        var department = _context.Departments
-            .Include(c=> c.Courses)
-            .Include(t => t.Trainees)
-            .Include(t => t.Instructors)
+
+        var department = _departmentRepository.GetDepartmentDetails()
             .FirstOrDefault(d => d.Id == id);
         return View(department);
     }
     public IActionResult Create()
     {
         ViewBag.Courses = new SelectList(
-            _context.Courses.ToList(),
+            _courseRepository.GetAll(),
             "Id",
             "Name"
         );
         ViewBag.Instructors = new SelectList(
-            _context.Instructors.ToList(),
+            _courseRepository.GetAll(),
             "Id",
             "Name"
         );
@@ -58,8 +61,8 @@ public class DepartmentController : Controller
     {
         if (dept != null)
         {
-            _context.Departments.Add(dept);
-            _context.SaveChanges();
+            _departmentRepository.Add(dept);
+            _departmentRepository.SaveChanges();
             return RedirectToAction("Index");
         }
         return View(dept);
@@ -67,11 +70,11 @@ public class DepartmentController : Controller
     [HttpGet] 
     public IActionResult Edit(int id)
     {
-        var Dept = _context.Departments 
-            .FirstOrDefault(d => d.Id == id);
-        List <Course> courses= _context.Courses.ToList();
-        List <Trainee> trainees= _context.Trainees.ToList();
-        List <Instructor> instructors= _context.Instructors.ToList();
+        var Dept = _departmentRepository.GetById(id);
+       
+        List <Course> courses= _courseRepository.GetAll();
+        List <Trainee> trainees= _traineeRepository.GetAll();
+        List <Instructor> instructors= _instructorRepository.GetAll();
         EditDepartment DeptVM = new EditDepartment();
         DeptVM.Id = Dept.Id;
         DeptVM.Name = Dept.Name;
@@ -86,15 +89,15 @@ public class DepartmentController : Controller
     {
         if (ModelState.IsValid)
         {
-            var DeptData = _context.Departments 
-                .FirstOrDefault(d => d.Id == Dept.Id);
+           
+            var DeptData = _departmentRepository.GetById(Dept.Id);
             DeptData.Id = Dept.Id;
             DeptData.Name = Dept.Name;
             DeptData.ManagerName = Dept.ManagerName;
             
 
             
-            _context.SaveChanges();
+           _departmentRepository.SaveChanges();
             return RedirectToAction("Index");
 
         }
@@ -106,14 +109,14 @@ public class DepartmentController : Controller
     [HttpPost]
     public IActionResult Delete(int id)
     {
-        Department? department = _context.Departments
-            .FirstOrDefault(i => i.Id == id);
+       
+        Department? department = _departmentRepository.GetById(id);
 
         if (department == null)
             return NotFound();
 
         department.IsDeleted = true;
-        _context.SaveChanges();
+       _departmentRepository.SaveChanges();
 
         return RedirectToAction("Index");
     }
